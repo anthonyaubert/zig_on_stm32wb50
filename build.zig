@@ -129,8 +129,8 @@ pub fn build(b: *std.Build) void {
 
     //////////////////////////////////////////////////////////////////
     elf.setLinkerScriptPath(b.path("src/stm32wb50xx_flash_cm4.ld"));
-    // elf.setVerboseCC(true);
-    // elf.setVerboseLink(true); //(NOTE: See https://github.com/ziglang/zig/issues/19410)
+    elf.setVerboseCC(true);
+    elf.setVerboseLink(false); //(NOTE: See https://github.com/ziglang/zig/issues/19410)
     elf.entry = .{ .symbol_name = "Reset_Handler" }; // Set Entry Point of the firmware (Already set in the linker script)
     elf.want_lto = false; // -flto
     elf.link_data_sections = true; // -fdata-sections

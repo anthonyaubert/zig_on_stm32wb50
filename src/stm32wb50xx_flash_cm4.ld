@@ -146,7 +146,7 @@ SECTIONS
   } >RAM1
 
   /* User_heap_stack section, used to check that there is enough RAM left */
-  ._user_heap_stack :
+  ._user_heap_stack (NOLOAD):
   {
     . = ALIGN(8);
     PROVIDE ( end = . );
@@ -154,7 +154,7 @@ SECTIONS
     . = . + _Min_Heap_Size;
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
-  } >RAM1
+  } >RAM1 AT>FLASH
 
   /* Remove information from the standard libraries */
   /DISCARD/ :
@@ -177,5 +177,3 @@ SECTIONS
     _eMB_MEM2 = . ;
   } >RAM_SHARED AT> FLASH
 }
-
-
