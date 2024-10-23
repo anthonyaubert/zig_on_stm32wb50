@@ -1,0 +1,14 @@
+.{
+    .name = "myZigApp",
+    .version = "0.0.0",
+    .dependencies = .{
+        .stm32wb50_hal = .{ .path = "lib/stm32wb50_hal" },
+    },
+
+    .paths = .{
+        "README.md",
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}

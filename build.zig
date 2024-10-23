@@ -1,6 +1,9 @@
 const builtin = @import("builtin");
 const std = @import("std");
 
+//TODOAA à priori il y a moyen de sortir les dossier de src
+const build_cubemx = @import("src/lib/stm32wb50_hal/build_cubemx.zig");
+
 pub fn build(b: *std.Build) void {
 
     //const version = std.SemanticVersion{ .major = 0, .minor = 1, .patch = 0 };
@@ -31,6 +34,10 @@ pub fn build(b: *std.Build) void {
         .single_threaded = true, // single core cpu
     });
 
+    // TODO pour ajouter un module
+    //    const stm32_hal_module = b.dependency("stm32wb50_hal", .{}).module("stm32_hal");
+    //    elf.root_module.addImport("stm32_hal", stm32_hal_module);
+
     //////////////////////////////////////////////////////////////////
     // User Options
     // Try to find arm-none-eabi-gcc program at a user specified path, or PATH variable if none provided
@@ -51,59 +58,8 @@ pub fn build(b: *std.Build) void {
     }
     //////////////////////////////////////////////////////////////////
 
-    const asm_sources = [_][]const u8{"src/startup_stm32wb50xx_cm4.s"};
-    const c_includes = [_][]const u8{ "Drivers/STM32WBxx_HAL_Driver/Inc", "Drivers/STM32WBxx_HAL_Driver/Inc/Legacy", "Drivers/CMSIS/Device/ST/STM32WBxx/Include", "Drivers/CMSIS/Include" };
-    const c_sources_drivers = [_][]const u8{
-        "Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal.c",
-        "Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_cortex.c",
-        "Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_dma.c",
-        "Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_dma_ex.c",
-        "Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_exti.c",
-        "Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_flash.c",
-        "Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_flash_ex.c",
-        "Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_gpio.c",
-        "Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_hsem.c",
-        "Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_pwr.c",
-        "Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_pwr_ex.c",
-        "Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_rcc.c",
-        "Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_rcc_ex.c",
-        "Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_tim.c",
-        "Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_tim_ex.c",
-    };
-    const c_sources_compile_flags = [_][]const u8{ "-Og", "-ggdb3", "-gdwarf-2", "-std=gnu17", "-DUSE_HAL_DRIVER", "-DSTM32WB50xx", "-DCORE_CM4", "-Wall" };
-
-    const driver_file = .{
-        .files = &c_sources_drivers,
-        .flags = &c_sources_compile_flags,
-    };
-    //////////////////////////////////////////////////////////////////
-    for (asm_sources) |path| {
-        elf.addAssemblyFile(b.path(path));
-    }
-    for (c_includes) |path| {
-        elf.addIncludePath(b.path(path));
-    }
-
-    elf.addCSourceFiles(driver_file);
-    //////////////////////////////////////////////////////////////////
-    const c_sources_core = [_][]const u8{
-        "Core/Src/main.c",
-        "Core/Src/gpio.c",
-        "Core/Src/stm32wbxx_it.c",
-        "Core/Src/stm32wbxx_hal_msp.c",
-        "Core/Src/system_stm32wbxx.c",
-        "Core/Src/sysmem.c",
-        "Core/Src/syscalls.c",
-    };
-    elf.addCSourceFiles(.{
-        .files = &c_sources_core,
-        .flags = &c_sources_compile_flags,
-    });
-
-    const c_includes_core = [_][]const u8{"Core/Inc"};
-    for (c_includes_core) |path| {
-        elf.addIncludePath(b.path(path));
-    }
+    // Add all files to include and compil
+    build_cubemx.aggregate(b, elf);
 
     //////////////////////////////////////////////////////////////////
     //  Use gcc-arm-none-eabi to figure out where library paths are

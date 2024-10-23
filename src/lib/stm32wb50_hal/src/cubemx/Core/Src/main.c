@@ -54,7 +54,7 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+extern void zig_entrypoint(void);
 /* USER CODE END 0 */
 
 /**
@@ -91,6 +91,8 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  zig_entrypoint();
+
   while (1)
   {
     /* USER CODE END WHILE */

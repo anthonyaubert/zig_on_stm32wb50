@@ -1,4 +1,7 @@
 const std = @import("std");
+
+const log = @import("lib/stm32_common/logging/logging_defmt.zig");
+
 const c = @cImport({
     @cDefine("USE_HAL_DRIVER", {});
     @cDefine("STM32WB50xx", {});
@@ -7,6 +10,7 @@ const c = @cImport({
 });
 
 export fn zig_entrypoint() void {
+    log.defmt.init();
     while (true) {
         c.HAL_GPIO_WritePin(c.LED_GPIO_Port, c.LED_Pin, c.GPIO_PIN_RESET);
         c.HAL_Delay(200);
