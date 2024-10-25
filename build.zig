@@ -4,6 +4,8 @@ const std = @import("std");
 //TODOAA à priori il y a moyen de sortir les dossier de src
 const build_cubemx = @import("src/lib/stm32wb50_hal/build_cubemx.zig");
 
+const build_freertos = @import("src/lib/freertos/build_freertos.zig");
+
 pub fn build(b: *std.Build) void {
 
     //const version = std.SemanticVersion{ .major = 0, .minor = 1, .patch = 0 };
@@ -58,8 +60,11 @@ pub fn build(b: *std.Build) void {
     }
     //////////////////////////////////////////////////////////////////
 
-    // Add all files to include and compil
+    // Add all files to include and compil stm32wb50 generated with cubeMx
     build_cubemx.aggregate(b, elf);
+
+    // Add all freertos files
+    build_freertos.aggregate(b, elf);
 
     //////////////////////////////////////////////////////////////////
     //  Use gcc-arm-none-eabi to figure out where library paths are

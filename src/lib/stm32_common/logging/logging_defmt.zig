@@ -5,7 +5,7 @@ const std = @import("std");
 //const rb = @import("../ring_buffer/RingBuffer.zig");
 
 const cfg = @import("../../../cfg/logging_defmt_cfg.zig");
-const system = @import("stm32_hal").system;
+const system = @import("../../stm32_hal/system.zig");
 
 // Size of a defered log without param
 // 1 byte for the 0x55 start byte
@@ -23,8 +23,8 @@ const deffered_log_max_str_param_size: u8 = 63;
 // Impossible d'utiliser ringbuffer si on veut pouvoir recover le buffer après un reset
 // il faudra également enregistrer un magick key au démarrage pour essayer de reconstruire la structure
 /// Log Buffer
-var log_buffer: [cfg.BUFFER_SIZE]u8 linksection(".noinit") = undefined;
-pub var ring_buffer: std.RingBuffer linksection(".noinit") = .{
+var log_buffer: [cfg.BUFFER_SIZE]u8 linksection("RAM_NOINIT") = undefined;
+pub var ring_buffer: std.RingBuffer linksection("RAM_NOINIT") = .{
     .data = &log_buffer,
     .read_index = 0,
     .write_index = 0,
@@ -33,6 +33,7 @@ pub var ring_buffer: std.RingBuffer linksection(".noinit") = .{
 // si ring buffer full il faut virer non pas octet par octet mais log par log
 pub var defmt: @This() = undefined;
 
+//
 pub fn init(self: @This()) void {
     _ = self;
 
@@ -49,15 +50,15 @@ pub fn init(self: @This()) void {
 // }
 
 pub fn DefmtLog_log(comptime logId: cfg.LoggingDefmtId) void {
-    var buffer: [deffered_log_min_size]u8 = 0;
+    var buffer: [deffered_log_min_size]u8 = undefined;
 
     const size = buildLogInfo(logId, &buffer);
 
     // Update the size in the buffer
-    buffer[1] |= size;
+    buffer[1] += size;
 
     system.enter_critical_section();
-    ring_buffer.writeSliceAssumeCapacity(buffer);
+    ring_buffer.writeSliceAssumeCapacity(&buffer);
     system.exit_critical_section();
 }
 
@@ -151,7 +152,7 @@ pub fn DefmtLog_log(comptime logId: cfg.LoggingDefmtId) void {
 // /* Definition of private functions                                            */
 // /******************************************************************************/
 
-fn buildLogInfo(comptime logId: cfg.LoggingDefmtId, pu8_buffer: []u8) void {
+fn buildLogInfo(comptime logId: cfg.LoggingDefmtId, pu8_buffer: []u8) u8 {
     var u8_index: u8 = 0;
 
     // Add start byte
@@ -162,21 +163,23 @@ fn buildLogInfo(comptime logId: cfg.LoggingDefmtId, pu8_buffer: []u8) void {
     u8_index += 1;
 
     // Add Log Id
-    pu8_buffer[u8_index] = logId >> 8;
+    pu8_buffer[u8_index] = @intFromEnum(logId) >> 8;
     u8_index += 1;
-    pu8_buffer[u8_index] = logId;
+    pu8_buffer[u8_index] = @intFromEnum(logId);
     u8_index += 1;
 
     // Add Log timestamp
     const u32_timestamp: u32 = system.get_tick();
-    pu8_buffer[u8_index] = u32_timestamp >> 24;
-    u8_index += 1;
-    pu8_buffer[u8_index] = u32_timestamp >> 16;
-    u8_index += 1;
-    pu8_buffer[u8_index] = u32_timestamp >> 8;
-    u8_index += 1;
-    pu8_buffer[u8_index] = u32_timestamp;
-    u8_index += 1;
+    _ = u32_timestamp;
+    // TODO AA voir comment convertir en zig de manière efficace
+    // pu8_buffer[u8_index] = u32_timestamp >> 24;
+    // u8_index += 1;
+    // pu8_buffer[u8_index] = u32_timestamp >> 16;
+    // u8_index += 1;
+    // pu8_buffer[u8_index] = u32_timestamp >> 8;
+    // u8_index += 1;
+    // pu8_buffer[u8_index] = u32_timestamp;
+    // u8_index += 1;
 
     return u8_index;
 }
