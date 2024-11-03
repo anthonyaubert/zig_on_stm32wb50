@@ -5,6 +5,8 @@ const logId = @import("cfg/logging_defmt_cfg.zig").LoggingDefmtId;
 
 const rtt = @import("lib/segger/rtt.zig");
 
+const hwTimer = @import("lib/stm32wb50_hal/src/hw_timer.zig");
+
 const freertos = @import("lib/freertos/freertos.zig");
 
 const c = @cImport({
@@ -14,33 +16,50 @@ const c = @cImport({
     @cInclude("main.h");
 });
 
-export fn zig_entrypoint(self: *@This()) void {
-    rtt.println("Init", .{});
+var timer1: hwTimer.StaticTimer(hwTimer.Mode.ePERIODIC, myBlinkTaskFunction) = undefined;
+var isledOn: bool = false;
 
+export fn zig_entrypoint() void {
+    const self = @This();
     log.defmt.init();
+    rtt.println("Init", .{});
+    //rtt.println("Start scheduler", .{});
 
-    rtt.println("Start scheduler", .{});
-
-    var task: freertos.StaticTask(@This(), 256, "blink task", myBlinkTaskFunction) = undefined;
-    task.create(self, @intFromEnum(freertos.task_priorities.rtos_prio_below_normal)) catch unreachable;
+    //var task: freertos.StaticTask(@This(), 256, "blink task", myBlinkTaskFunction) = undefined;
+    //task.create(self, @intFromEnum(freertos.task_priorities.rtos_prio_below_normal)) catch unreachable;
 
     // Start the FreeRTOS scheduler
-    freertos.vTaskStartScheduler();
+    //freertos.vTaskStartScheduler();
+
+    hwTimer.init(true);
+
+    self.timer1.create() catch unreachable;
+    self.timer1.start(500);
+
+    while (true) {
+        c.HAL_Delay(100);
+    }
+
+    // while (true) {
+    //     c.HAL_GPIO_WritePin(c.LED_G_GPIO_Port, c.LED_G_Pin, c.GPIO_PIN_RESET);
+    //     c.HAL_Delay(200);
+    //     c.HAL_GPIO_WritePin(c.LED_G_GPIO_Port, c.LED_G_Pin, c.GPIO_PIN_SET);
+    //     c.HAL_Delay(500);
+
+    //     log.DefmtLog_log(logId.LogTest1);
+    // }
 
     unreachable;
 }
 
-fn myBlinkTaskFunction(self: *@This()) noreturn {
-    _ = self;
-
-    while (true) {
-        c.HAL_GPIO_WritePin(c.LED_GPIO_Port, c.LED_Pin, c.GPIO_PIN_RESET);
-        c.HAL_Delay(200);
-        c.HAL_GPIO_WritePin(c.LED_GPIO_Port, c.LED_Pin, c.GPIO_PIN_SET);
-        c.HAL_Delay(500);
-
-        log.DefmtLog_log(logId.LogTest1);
+fn myBlinkTaskFunction() void {
+    const self = @This();
+    if (self.isledOn) {
+        c.HAL_GPIO_WritePin(c.LED_G_GPIO_Port, c.LED_G_Pin, c.GPIO_PIN_RESET);
+    } else {
+        c.HAL_GPIO_WritePin(c.LED_G_GPIO_Port, c.LED_G_Pin, c.GPIO_PIN_SET);
     }
+    self.isledOn = !self.isledOn; // Toggle the LED state
 }
 
 export fn vApplicationStackOverflowHook() noreturn {

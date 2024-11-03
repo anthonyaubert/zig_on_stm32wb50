@@ -7,7 +7,27 @@ fn build_path(comptime filepath: []const u8) []const u8 {
 }
 
 const asm_sources = [_][]const u8{build_path("startup_stm32wb50xx_cm4.s")};
-const c_includes = [_][]const u8{ build_path("Drivers/STM32WBxx_HAL_Driver/Inc"), build_path("Drivers/STM32WBxx_HAL_Driver/Inc/Legacy"), build_path("Drivers/CMSIS/Device/ST/STM32WBxx/Include"), build_path("Drivers/CMSIS/Include") };
+const c_includes = [_][]const u8{
+    build_path("Drivers/STM32WBxx_HAL_Driver/Inc"),
+    build_path("Drivers/STM32WBxx_HAL_Driver/Inc/Legacy"),
+    build_path("Drivers/CMSIS/Device/ST/STM32WBxx/Include"),
+    build_path("Drivers/CMSIS/Include"),
+    // build_path("Middlewares/ST/STM32_WPAN/ble"),
+    // build_path("Middlewares/ST/STM32_WPAN/ble/core"),
+    // build_path("Middlewares/ST/STM32_WPAN/ble/core/auto"),
+    // build_path("Middlewares/ST/STM32_WPAN/ble/core/template"),
+    // build_path("Middlewares/ST/STM32_WPAN/ble/svc/Inc"),
+    // build_path("Middlewares/ST/STM32_WPAN/ble/svc/Src"),
+    // build_path("Middlewares/ST/STM32_WPAN/interface/patterns/ble_thread"),
+    // build_path("Middlewares/ST/STM32_WPAN/interface/patterns/ble_thread/shci"),
+    // build_path("Middlewares/ST/STM32_WPAN/interface/patterns/ble_thread/tl"),
+    // build_path("Middlewares/ST/STM32_WPAN/utilities"),
+    // build_path("Middlewares/ST/STM32_WPAN"),
+    // build_path("STM32_WPAN/App"),
+    // build_path("Utilities/lpm/tiny_lpm"),
+};
+
+const c_includes_core = [_][]const u8{build_path("Core/Inc")};
 
 const c_sources_drivers = [_][]const u8{
     build_path("Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal.c"),
@@ -25,6 +45,8 @@ const c_sources_drivers = [_][]const u8{
     build_path("Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_rcc_ex.c"),
     build_path("Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_tim.c"),
     build_path("Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_tim_ex.c"),
+    build_path("Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_rtc.c"),
+    build_path("Drivers/STM32WBxx_HAL_Driver/Src/stm32wbxx_hal_ipcc.c"),
 };
 const c_sources_compile_flags = [_][]const u8{ "-Og", "-ggdb3", "-gdwarf-2", "-std=gnu17", "-DUSE_HAL_DRIVER", "-DSTM32WB50xx", "-DCORE_CM4", "-Wall" };
 
@@ -41,9 +63,10 @@ const c_sources_core = [_][]const u8{
     build_path("Core/Src/system_stm32wbxx.c"),
     build_path("Core/Src/sysmem.c"),
     build_path("Core/Src/syscalls.c"),
+    build_path("Core/Src/hw_timerserver.c"),
+    build_path("Core/Src/rtc.c"),
+    build_path("Core/Src/ipcc.c"),
 };
-
-const c_includes_core = [_][]const u8{build_path("Core/Inc")};
 
 pub fn aggregate(b: *std.Build, elf: *std.Build.Step.Compile) void {
     for (asm_sources) |path| {

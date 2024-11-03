@@ -11,6 +11,9 @@ TODO
 -> Ajouter une dépendance à stm32_utils via fichier zon
 
 
+cf https://github.com/STMicroelectronics/STM32CubeWB/blob/master/Projects/P-NUCLEO-WB55.Nucleo/Applications/BLE/BLE_Peripheral_Lite_EventCallbacks
+pour exemple minimaliste
+
 // Tester sortie RTT.zig
 // Ajouter writer (rtt ou uart) à logging_defmt init
 

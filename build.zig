@@ -4,7 +4,7 @@ const std = @import("std");
 //TODOAA à priori il y a moyen de sortir les dossier de src
 const build_cubemx = @import("src/lib/stm32wb50_hal/build_cubemx.zig");
 
-const build_freertos = @import("src/lib/freertos/build_freertos.zig");
+//const build_freertos = @import("src/lib/freertos/build_freertos.zig");
 
 pub fn build(b: *std.Build) void {
 
@@ -64,7 +64,7 @@ pub fn build(b: *std.Build) void {
     build_cubemx.aggregate(b, elf);
 
     // Add all freertos files
-    build_freertos.aggregate(b, elf);
+    //build_freertos.aggregate(b, elf);
 
     //////////////////////////////////////////////////////////////////
     //  Use gcc-arm-none-eabi to figure out where library paths are
