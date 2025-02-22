@@ -1,20 +1,16 @@
 const std = @import("std");
 
-const log_defmt = @import("lib/stm32_common/logging/logging_defmt.zig");
+pub const logging_defmt_cfg = @import("cfg/logging_defmt_cfg.zig");
 
-const logging_defmt_cfg = @import("cfg/logging_defmt_cfg.zig");
+const log_defmt = @import("lib/stm32_common/logging/logging_defmt.zig");
 const logId = logging_defmt_cfg.LoggingDefmtId;
 
-const rtt = @import("lib/stm32_common/segger/rtt.zig");
+const hal = @import("hal");
+const hwTimer = hal.hw_timer;
+const sys = hal.system;
 
-const hwTimer = @import("lib/stm32wb50_hal/src/hw_timer.zig");
+const rtt = @import("lib/segger_c/rtt.zig");
 
-const c = @cImport({
-    @cDefine("USE_HAL_DRIVER", {});
-    @cDefine("STM32WB50xx", {});
-    @cDefine("__PROGRAM_START", {}); //bug: https://github.com/ziglang/zig/issues/19687
-    @cInclude("main.h");
-});
 
 var timer1: hwTimer.StaticTimer(hwTimer.Mode.ePERIODIC, myBlinkTaskFunction1) = undefined;
 var isledOn: bool = false;
@@ -56,7 +52,7 @@ export fn zig_entrypoint() void {
     self.timer2.start(100);
 
     while (true) {
-        c.HAL_Delay(100);
+        sys.delay(100);
     }
 
     unreachable;
