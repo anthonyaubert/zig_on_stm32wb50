@@ -1,7 +1,7 @@
 const std = @import("std");
 
 //TODO
-const lib_path = "src/lib/stm32_common/segger/";
+const lib_path = "src/lib/segger_c/";
 
 fn build_path(comptime filepath: []const u8) []const u8 {
     return lib_path ++ filepath;
