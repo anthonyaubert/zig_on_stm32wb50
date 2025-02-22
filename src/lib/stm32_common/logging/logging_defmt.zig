@@ -3,7 +3,7 @@
 const std = @import("std");
 
 //TODO add config module ?
-const cfg_defmt = @import("../../../cfg/logging_defmt_cfg.zig");
+const cfg_defmt = @import("root").logging_defmt_cfg;
 
 pub const LogLevel = enum {
     INFO,
