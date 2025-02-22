@@ -1,11 +1,7 @@
 const builtin = @import("builtin");
 const std = @import("std");
 
-//TODO
-const build_cubemx = @import("src/lib/stm32wb50_hal/build_cubemx.zig");
-const build_rtt = @import("src/lib/stm32_common/segger/build_rtt.zig");
-
-//const build_freertos = @import("src/lib/freertos/build_freertos.zig");
+const build_rtt = @import("src/lib/segger_c/build_rtt.zig");
 
 pub fn build(b: *std.Build) void {
 
@@ -37,59 +33,23 @@ pub fn build(b: *std.Build) void {
         .single_threaded = true, // single core cpu
     });
 
-    // TODO pour ajouter un module
-    //    const stm32_hal_module = b.dependency("stm32wb50_hal", .{}).module("stm32_hal");
-    //    elf.root_module.addImport("stm32_hal", stm32_hal_module);
+    // const rtt = b.dependency("rtt", .{});
+    // elf.root_module.addImport("rtt", rtt.module("rtt"));
 
-    //////////////////////////////////////////////////////////////////
-    // User Options
-    // Try to find arm-none-eabi-gcc program at a user specified path, or PATH variable if none provided
-    const arm_gcc_pgm = if (b.option([]const u8, "ARM_GCC_PATH", "Path to arm-none-eabi-gcc compiler")) |arm_gcc_path|
-        b.findProgram(&.{"arm-none-eabi-gcc"}, &.{arm_gcc_path}) catch {
-            std.log.err("Couldn't find arm-none-eabi-gcc at provided path: {s}\n", .{arm_gcc_path});
-            unreachable;
-        }
-    else
-        b.findProgram(&.{"arm-none-eabi-gcc"}, &.{}) catch {
-            std.log.err("Couldn't find arm-none-eabi-gcc in PATH, try manually providing the path to this executable with -Darmgcc=[path]\n", .{});
-            unreachable;
-        };
+    const hal = b.dependency("hal", .{ .optimize = opti, .target = target }).module("hal");
+    elf.root_module.addImport("hal", hal);
 
-    // Allow user to enable float formatting in newlib (printf, sprintf, ...)
-    if (b.option(bool, "NEWLIB_PRINTF_FLOAT", "Force newlib to include float support for printf()")) |_| {
-        elf.forceUndefinedSymbol("_printf_float"); // GCC equivalent : "-u _printf_float"
-    }
-    //////////////////////////////////////////////////////////////////
+    const libc = b.dependency(
+        "picolibc",
+        .{ .optimize = .ReleaseSmall, .target = target },
+    ).artifact("c");
 
-    // Add all files to include and compil stm32wb50 generated with cubeMx
-    build_cubemx.aggregate(b, elf);
+    hal.linkLibrary(libc);
 
     // Add all files for Segger RTT
     build_rtt.aggregate(b, elf);
+    elf.linkLibrary(libc);
 
-    //////////////////////////////////////////////////////////////////
-    //  Use gcc-arm-none-eabi to figure out where library paths are
-    const gcc_arm_sysroot_path = std.mem.trim(u8, b.run(&.{ arm_gcc_pgm, "-print-sysroot" }), "\r\n");
-    const gcc_arm_multidir_relative_path = std.mem.trim(u8, b.run(&.{ arm_gcc_pgm, "-mcpu=cortex-m4", "-mthumb", "-mfpu=fpv4-sp-d16", "-mfloat-abi=hard", "-print-multi-directory" }), "\r\n");
-    const gcc_arm_version = std.mem.trim(u8, b.run(&.{ arm_gcc_pgm, "-dumpversion" }), "\r\n");
-    const gcc_arm_lib_path1 = b.fmt("{s}/../lib/gcc/arm-none-eabi/{s}/{s}", .{ gcc_arm_sysroot_path, gcc_arm_version, gcc_arm_multidir_relative_path });
-    const gcc_arm_lib_path2 = b.fmt("{s}/lib/{s}", .{ gcc_arm_sysroot_path, gcc_arm_multidir_relative_path });
-
-    // Manually add "nano" variant newlib C standard lib from arm-none-eabi-gcc library folders
-    elf.addLibraryPath(.{ .cwd_relative = gcc_arm_lib_path1 });
-    elf.addLibraryPath(.{ .cwd_relative = gcc_arm_lib_path2 });
-    elf.addSystemIncludePath(.{ .cwd_relative = b.fmt("{s}/include", .{gcc_arm_sysroot_path}) });
-    elf.linkSystemLibrary("c_nano"); // Use "g_nano" ?
-    elf.linkSystemLibrary("m");
-
-    // Manually include C runtime objects bundled with arm-none-eabi-gcc
-    elf.addObjectFile(.{ .cwd_relative = b.fmt("{s}/crt0.o", .{gcc_arm_lib_path2}) });
-    elf.addObjectFile(.{ .cwd_relative = b.fmt("{s}/crti.o", .{gcc_arm_lib_path1}) });
-    elf.addObjectFile(.{ .cwd_relative = b.fmt("{s}/crtbegin.o", .{gcc_arm_lib_path1}) });
-    elf.addObjectFile(.{ .cwd_relative = b.fmt("{s}/crtend.o", .{gcc_arm_lib_path1}) });
-    elf.addObjectFile(.{ .cwd_relative = b.fmt("{s}/crtn.o", .{gcc_arm_lib_path1}) });
-
-    //////////////////////////////////////////////////////////////////
     const linker_file_path = b.path("src/stm32wb50xx_flash_cm4.ld");
     elf.setLinkerScriptPath(linker_file_path);
     elf.setVerboseCC(true);

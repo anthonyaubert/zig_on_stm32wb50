@@ -2,7 +2,11 @@
     .name = "myZigApp",
     .version = "0.0.0",
     .dependencies = .{
-        .stm32wb50_hal = .{ .path = "lib/stm32wb50_hal" },
+        .hal = .{ .path = "lib/stm32wb50_hal" },
+        .picolibc = .{
+            .url = "git+https://github.com/allyourcodebase/picolibc-zig#7a128e1d7a3781b3eae7cf3d7c59c66a2bee36e7",
+            .hash = "1220e83a23185cb5a9749e107a3ee4d725f50dc176f48460a89ecd545d249e8f1e87",
+        },
     },
 
     .paths = .{
@@ -10,5 +14,6 @@
         "build.zig",
         "build.zig.zon",
         "src",
+        "build",
     },
 }

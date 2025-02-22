@@ -9,6 +9,10 @@ pub fn getTick() u32 {
     return c.HAL_GetTick();
 }
 
+pub inline fn delay(delay_ms: u32) void {
+    c.HAL_Delay(delay_ms);
+}
+
 pub fn enterCriticalSection() void {
     //TODO
 }
