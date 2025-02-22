@@ -55,7 +55,7 @@ pub fn main() !void {
     if (child.stdout) |child_stdout| {
         var stdout_stream = child_stdout.reader();
         const cmd_size_output = try stdout_stream.readAllAlloc(allocator, 2048);
-        try stdout.print("{s}", .{cmd_size_output});
+        //        try stdout.print("{s}", .{cmd_size_output});
 
         // Extract memory section from elf file
         const memory_region_from_elf = try parse_size_command_output(cmd_size_output, allocator);
